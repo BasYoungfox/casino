@@ -1,0 +1,99 @@
+@import "./stake-base.css";
+@import "./stake-home.css";
+@import "./stake-games.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+/* Game wrappers vullen de beschikbare hoogte */
+.game-page-wrapper {
+  height: 100%;
+}
+
+/* Nummer-input spinners verbergen */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
+
+/* Scrollbars verbergen (noir-stijl) */
+::-webkit-scrollbar { width: 0; height: 0; display: none; }
+* { scrollbar-width: none; -ms-overflow-style: none; }
+.hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.hide-scrollbar::-webkit-scrollbar { display: none; width: 0; }
+
+/* Mobiel: sidebar/verberg elementen */
+@media (max-width: 768px) {
+  .app-sidebar { display: none !important; }
+  .right-chat { display: none !important; }
+  .hamburger-btn { display: flex !important; }
+  .topbar-faucet { display: none !important; }
+  .game-page-wrapper { padding: 0 !important; }
+  .game-page-wrapper > * { width: 100% !important; }
+}
+
+
+/* === Herbruikbare noir-stijl componenten (storten/admin/etc.) === */
+.card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+}
+.label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+.input {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 11px 12px;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+.input:focus { border-color: var(--accent-blue); }
+.input::placeholder { color: var(--text-muted); }
+
+.btn-primary, .btn-ghost, .btn-danger, .btn-success {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: none; border-radius: var(--radius-md); padding: 11px 16px;
+  font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: background var(--transition-fast), filter var(--transition-fast);
+  text-decoration: none;
+}
+.btn-primary:disabled, .btn-ghost:disabled, .btn-danger:disabled, .btn-success:disabled {
+  opacity: 0.4; cursor: not-allowed;
+}
+.btn-primary { background: var(--accent-green); color: #07240a; }
+.btn-primary:hover:not(:disabled) { background: var(--accent-green-hover); }
+.btn-success { background: var(--accent-green); color: #07240a; }
+.btn-success:hover:not(:disabled) { background: var(--accent-green-hover); }
+.btn-danger { background: var(--accent-red); color: #fff; }
+.btn-danger:hover:not(:disabled) { filter: brightness(1.1); }
+.btn-ghost { background: var(--bg-tertiary); color: var(--text-primary); }
+.btn-ghost:hover:not(:disabled) { background: #3a5364; }
+
+.pill {
+  display: inline-flex; align-items: center;
+  border-radius: var(--radius-sm); padding: 2px 8px;
+  font-size: 12px; font-weight: 600;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}

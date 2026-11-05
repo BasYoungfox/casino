@@ -1,0 +1,125 @@
+// This is the Prisma schema for the casino platform.
+// See https://pris.ly/d/prisma-schema for more info.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  email        String    @unique
+  passwordHash String
+  role         String    @default("USER") // USER | ADMIN
+  balance      Float     @default(0)
+  createdAt    DateTime  @default(now())
+
+  deposits  Deposit[]
+  reviews   Deposit[]      @relation("Reviews")
+  transactions Transaction[]
+  crashRounds CrashRound[]
+  minesGames  MinesGame[]
+  withdrawals     Withdrawal[]
+  withdrawalReviews Withdrawal[] @relation("WithdrawalReviews")
+}
+
+model Deposit {
+  id              String    @id @default(cuid())
+  userId          String
+  amount          Float
+  status          String    @default("PENDING") // PENDING | APPROVED | REJECTED
+  tikkieReference String?   // optionele Tikkie link / referentie
+  proofFilePath   String    // pad naar geupload bewijs
+  note            String?   // opmerking van gebruiker
+  createdAt       DateTime  @default(now())
+  reviewedAt      DateTime?
+  reviewedById    String?
+  reviewNote      String?   // opmerking van admin bij afkeuren
+
+  user       User    @relation(fields: [userId], references: [id])
+  reviewedBy User?   @relation("Reviews", fields: [reviewedById], references: [id])
+
+  @@index([status])
+  @@index([userId])
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // DEPOSIT | CRASH_BET | CRASH_WIN | REJECT_REFUND
+  amount    Float    // positief = bijschrijving, negatief = afschrijving
+  balanceAfter Float
+  depositId String?
+  crashRoundId String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model CrashRound {
+  id               String    @id @default(cuid())
+  userId           String
+  betAmount        Float
+  crashPoint       Float     // geheime multiplier waarop de ronde crash heeft
+  startTime        DateTime
+  crashTimeMs      Int       // ms na startTime waarop de crash valt
+  status           String    @default("RUNNING") // RUNNING | CASHED_OUT | CRASHED
+  autoCashout      Float?    // optioneel automatische uitbetaling doel-multiplier
+  cashoutMultiplier Float?   // multiplier waarop is uitbetaald
+  payout           Float?    // totaal gecrediteerd bij winst (incl. inzet terug)
+  createdAt        DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model MinesGame {
+  id            String    @id @default(cuid())
+  userId        String
+  betAmount     Float
+  minesCount    Int
+  totalTiles    Int       @default(25)
+  minePositions String    // JSON array van mijn-posities (geheim tot game over)
+  revealed      String    @default("[]") // JSON array van veilig onthulde tegels
+  status        String    @default("RUNNING") // RUNNING | CASHED_OUT | BUSTED
+  multiplier    Float     @default(1)
+  payout        Float?
+  createdAt     DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Setting {
+  key   String @id
+  value String
+}
+
+model Withdrawal {
+  id             String    @id @default(cuid())
+  userId         String
+  amount         Float
+  tikkieUrl      String    // gebruiker's Tikkie-link
+  status         String    @default("PENDING") // PENDING | APPROVED | REJECTED
+  note           String?   // opmerking van gebruiker
+  reviewedAt     DateTime?
+  reviewedById   String?
+  reviewNote     String?   // opmerking van admin
+  createdAt      DateTime  @default(now())
+
+  user       User  @relation(fields: [userId], references: [id])
+  reviewedBy User? @relation("WithdrawalReviews", fields: [reviewedById], references: [id])
+
+  @@index([status])
+  @@index([userId])
+}

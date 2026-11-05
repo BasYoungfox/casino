@@ -1,0 +1,9 @@
+node_modules
+.next
+dev.db
+dev.db-journal
+uploads
+*.log
+.env
+.env.local
+.env*.local
