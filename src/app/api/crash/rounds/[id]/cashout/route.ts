@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { multiplierAt } from '@/lib/crashMath';
+import { recordCrashCycle } from '@/lib/cycleRecord';
 
 export async function POST(
   _req: Request,
@@ -86,6 +87,9 @@ export async function POST(
     });
     return balance;
   });
+
+  // Record cycle bet (fire-and-forget, non-blocking)
+  recordCrashCycle({ userId: round.userId, betAmount: round.betAmount, outcome: 'WIN', payout, roundId: round.id }).catch(() => {});
 
   return NextResponse.json({
     ok: true,

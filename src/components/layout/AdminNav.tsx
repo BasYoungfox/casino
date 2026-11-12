@@ -3,6 +3,7 @@ import Link from 'next/link';
 const LINKS = [
   { href: '/admin/overview',     label: 'Statistiek' },
   { href: '/admin/sessions',     label: 'Live sessies' },
+  { href: '/admin/cycle',        label: 'Bet-cyclus' },
   { href: '/admin/deposits',     label: 'Stortingen' },
   { href: '/admin/withdrawals',  label: 'Opnames' },
   { href: '/admin/settings',     label: 'Instellingen' },

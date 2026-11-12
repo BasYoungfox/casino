@@ -123,3 +123,20 @@ model Withdrawal {
   @@index([status])
   @@index([userId])
 }
+
+model BetCycle {
+  id            String   @id @default(cuid())
+  cycleNumber   Int      // welke cyclus (1, 2, 3, ...)
+  betInCycle    Int      // positie in de cyclus (1-25)
+  totalBets     Int      // globale teller
+  userId        String
+  game          String   // CRASH | MINES
+  betAmount     Float
+  outcome       String   // WIN | LOSS
+  payout        Float    @default(0)
+  profit        Float    // house profit op deze bet (positief = house wint)
+  createdAt     DateTime @default(now())
+
+  @@index([cycleNumber])
+  @@index([createdAt])
+}

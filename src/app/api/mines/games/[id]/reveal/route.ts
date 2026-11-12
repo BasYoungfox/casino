@@ -3,6 +3,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { minesMultiplier } from '@/lib/minesMath';
 import { getSettingNumber } from '@/lib/settings';
+import { recordMinesCycle } from '@/lib/cycleRecord';
 
 export async function POST(
   req: Request,
@@ -44,6 +45,7 @@ export async function POST(
       where: { id: game.id },
       data: { status: 'BUSTED' },
     });
+    recordMinesCycle({ userId: game.userId, betAmount: game.betAmount, outcome: 'LOSS', payout: 0 }).catch(() => {});
     return NextResponse.json({
       busted: true,
       tile,
@@ -82,6 +84,8 @@ export async function POST(
       });
       return balance;
     });
+    // Auto-win on last tile
+    recordMinesCycle({ userId: game.userId, betAmount: game.betAmount, outcome: 'WIN', payout }).catch(() => {});
     return NextResponse.json({
       safe: true,
       tile,

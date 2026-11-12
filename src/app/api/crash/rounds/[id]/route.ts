@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { multiplierAt, timeToReach } from '@/lib/crashMath';
+import { recordCrashCycle } from '@/lib/cycleRecord';
 
 type Phase = 'running' | 'cashed_out' | 'crashed';
 
@@ -54,6 +55,7 @@ export async function GET(
       where: { id: round.id },
       data: { status: 'CRASHED' },
     });
+    recordCrashCycle({ userId: round.userId, betAmount: round.betAmount, outcome: 'LOSS', payout: 0, roundId: round.id }).catch(() => {});
     return NextResponse.json({
       phase: 'crashed' as Phase,
       multiplier: round.crashPoint,

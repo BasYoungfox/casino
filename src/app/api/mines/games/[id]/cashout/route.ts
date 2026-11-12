@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { recordMinesCycle } from '@/lib/cycleRecord';
 
 export async function POST(
   _req: Request,
@@ -47,6 +48,8 @@ export async function POST(
     });
     return balance;
   });
+
+  recordMinesCycle({ userId: game.userId, betAmount: game.betAmount, outcome: 'WIN', payout }).catch(() => {});
 
   return NextResponse.json({
     ok: true,

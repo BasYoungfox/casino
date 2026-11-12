@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { getGameConfig, setGameConfig, type GameConfig } from '@/lib/settings';
+import { getCycleConfig, type CycleConfig } from '@/lib/cycleEngine';
+import { setSetting } from '@/lib/settings';
 
 export async function GET() {
   const user = await getCurrentUser();
   if (!user || user.role !== 'ADMIN') {
     return NextResponse.json({ error: 'Geen toegang.' }, { status: 403 });
   }
-  return NextResponse.json(await getGameConfig());
+  const [gameConfig, cycleConfig] = await Promise.all([getGameConfig(), getCycleConfig()]);
+  return NextResponse.json({ gameConfig, cycleConfig });
 }
 
 export async function POST(req: Request) {
@@ -17,6 +20,20 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json().catch(() => ({}));
+
+  // Handle cycle config update
+  if (body.type === 'cycle') {
+    const c = body.config as Partial<CycleConfig>;
+    if (c.targetProfitPerCycle !== undefined) await setSetting('cycle.targetProfit', String(Number(c.targetProfitPerCycle)));
+    if (c.houseBuffer !== undefined) await setSetting('cycle.houseBuffer', String(Number(c.houseBuffer)));
+    if (c.winMultiplier !== undefined) await setSetting('cycle.winMultiplier', String(Number(c.winMultiplier)));
+    if (c.cycleSize !== undefined) await setSetting('cycle.size', String(Math.round(Number(c.cycleSize))));
+    if (c.enabled !== undefined) await setSetting('cycle.enabled', c.enabled ? 'true' : 'false');
+    const [gameConfig, cycleConfig] = await Promise.all([getGameConfig(), getCycleConfig()]);
+    return NextResponse.json({ gameConfig, cycleConfig });
+  }
+
+  // Handle game config update
   const game = body.game as 'crash' | 'mines' | undefined;
   const c = body.config as Partial<GameConfig> | undefined;
   if (!game || !c) {
@@ -27,26 +44,17 @@ export async function POST(req: Request) {
   if (c.houseEdge !== undefined) {
     let he = Number(c.houseEdge);
     if (isNaN(he) || he < 0) he = 0;
-    if (he > 0.5) he = 0.5; // max 50% house edge
+    if (he > 0.5) he = 0.5;
     update.houseEdge = he;
   }
-  if (c.minBet !== undefined) {
-    let min = Number(c.minBet);
-    if (isNaN(min) || min < 0) min = 0;
-    update.minBet = min;
-  }
-  if (c.maxBet !== undefined) {
-    let max = Number(c.maxBet);
-    if (isNaN(max) || max < 0) max = 0;
-    update.maxBet = max;
-  }
-  if (c.enabled !== undefined) {
-    update.enabled = !!c.enabled;
-  }
+  if (c.minBet !== undefined) { let min = Number(c.minBet); if (isNaN(min) || min < 0) min = 0; update.minBet = min; }
+  if (c.maxBet !== undefined) { let max = Number(c.maxBet); if (isNaN(max) || max < 0) max = 0; update.maxBet = max; }
+  if (c.enabled !== undefined) update.enabled = !!c.enabled;
   if (update.minBet !== undefined && update.maxBet !== undefined && update.minBet > update.maxBet) {
     return NextResponse.json({ error: 'Min inzet mag niet boven max inzet liggen.' }, { status: 400 });
   }
 
   await setGameConfig(game, update);
-  return NextResponse.json(await getGameConfig());
+  const [gameConfig, cycleConfig] = await Promise.all([getGameConfig(), getCycleConfig()]);
+  return NextResponse.json({ gameConfig, cycleConfig });
 }

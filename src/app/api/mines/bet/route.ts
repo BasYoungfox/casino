@@ -3,6 +3,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { generateMines, TOTAL_TILES } from '@/lib/minesMath';
 import { getGameConfig } from '@/lib/settings';
+import { getCycleConfig, getNextSlot, generateControlledMines } from '@/lib/cycleEngine';
 
 export async function POST(req: Request) {
   const user = await getCurrentUser();
@@ -36,7 +37,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: `Aantal mijnen moet 1 t/m ${TOTAL_TILES - 1} zijn.` }, { status: 400 });
   }
 
-  const minePositions = generateMines(minesCount, TOTAL_TILES);
+  const minePositions = await (async () => {
+    const cycleConfig = await getCycleConfig();
+    if (cycleConfig.enabled) {
+      const slot = await getNextSlot();
+      return generateControlledMines(slot.shouldWin, minesCount, TOTAL_TILES);
+    }
+    return generateMines(minesCount, TOTAL_TILES);
+  })();
 
   const result = await prisma.$transaction(async (tx) => {
     const fresh = await tx.user.findUnique({ where: { id: user.id } });
