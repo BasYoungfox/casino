@@ -70,10 +70,10 @@ export default async function AdminDeposits() {
 
               {/* Rechter bewijs */}
               <div>
-                <a href={d.proofFilePath} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
+                <a href={`/api/admin/proof?id=${d.id}`} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={d.proofFilePath}
+                    src={`/api/admin/proof?id=${d.id}`}
                     alt="Betalingsbewijs"
                     style={{ maxHeight: 320, width: '100%', objectFit: 'contain', borderRadius: 'var(--radius-md)', background: 'var(--bg-input)', border: '1px solid var(--border-color)' }}
                   />

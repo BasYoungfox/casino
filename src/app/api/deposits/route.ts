@@ -30,9 +30,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Bestandstype niet toegestaan.' }, { status: 415 });
   }
 
-  // Upload to Vercel Blob
+  // Upload to Vercel Blob (private — betalingsbewijzen zijn niet publiek)
   const blob = await put(`deposits/${user.id}/${Date.now()}-${file.name}`, file, {
-    access: 'public',
+    access: 'private',
   });
 
   const deposit = await prisma.deposit.create({
