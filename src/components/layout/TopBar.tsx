@@ -1,10 +1,18 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect } from 'react';
 import { useBalance } from '@/components/providers/BalanceProvider';
 
 export default function TopBar() {
-  const { balance, username, role } = useBalance();
+  const { balance, username, role, refresh } = useBalance();
+
+  // Poll balance every 10s so deposits/withdrawals approved by admin
+  // are reflected without requiring a page reload or re-login
+  useEffect(() => {
+    const id = setInterval(refresh, 10_000);
+    return () => clearInterval(id);
+  }, [refresh]);
 
   return (
     <header className="header">
@@ -33,7 +41,7 @@ export default function TopBar() {
           </svg>
         </Link>
         {role === 'ADMIN' && (
-          <Link href="/admin/deposits" className="header-icon-btn" title="Admin" style={{ textDecoration: 'none' }}>
+          <Link href="/admin/overview" className="header-icon-btn" title="Admin" style={{ textDecoration: 'none' }}>
             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
               <path d="M12 2L4 5v6c0 5.25 3.4 9.74 8 11 4.6-1.26 8-5.75 8-11V5l-8-3z" />
             </svg>
