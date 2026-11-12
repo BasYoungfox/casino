@@ -26,7 +26,6 @@ export async function POST(req: Request) {
     const c = body.config as Partial<CycleConfig>;
     if (c.targetProfitPerCycle !== undefined) await setSetting('cycle.targetProfit', String(Number(c.targetProfitPerCycle)));
     if (c.houseBuffer !== undefined) await setSetting('cycle.houseBuffer', String(Number(c.houseBuffer)));
-    if (c.winMultiplier !== undefined) await setSetting('cycle.winMultiplier', String(Number(c.winMultiplier)));
     if (c.cycleSize !== undefined) await setSetting('cycle.size', String(Math.round(Number(c.cycleSize))));
     if (c.enabled !== undefined) await setSetting('cycle.enabled', c.enabled ? 'true' : 'false');
     const [gameConfig, cycleConfig] = await Promise.all([getGameConfig(), getCycleConfig()]);

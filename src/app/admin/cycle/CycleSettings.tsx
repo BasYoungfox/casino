@@ -8,7 +8,6 @@ export default function CycleSettings({ initialConfig }: { initialConfig: CycleC
     enabled: initialConfig.enabled,
     targetProfit: String(initialConfig.targetProfitPerCycle),
     houseBuffer: String(initialConfig.houseBuffer),
-    winMultiplier: String(initialConfig.winMultiplier),
     cycleSize: String(initialConfig.cycleSize),
   });
   const [saving, setSaving] = useState(false);
@@ -25,7 +24,6 @@ export default function CycleSettings({ initialConfig }: { initialConfig: CycleC
           enabled: cfg.enabled,
           targetProfitPerCycle: parseFloat(cfg.targetProfit),
           houseBuffer: parseFloat(cfg.houseBuffer),
-          winMultiplier: parseFloat(cfg.winMultiplier),
           cycleSize: parseInt(cfg.cycleSize),
         },
       }),
@@ -42,11 +40,11 @@ export default function CycleSettings({ initialConfig }: { initialConfig: CycleC
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Cyclus-flow parameters</h3>
+        <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Parameters</h3>
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer' }}>
           <input type="checkbox" checked={cfg.enabled} onChange={(e) => setCfg({ ...cfg, enabled: e.target.checked })}
             style={{ width: 15, height: 15, accentColor: 'var(--accent-green)' }} />
-          Cyclus-engine actief
+          Correctie-engine actief
         </label>
       </div>
 
@@ -55,30 +53,24 @@ export default function CycleSettings({ initialConfig }: { initialConfig: CycleC
           <span style={label}>Doel-winst per cyclus (€)</span>
           <input className="input" type="number" step="0.01" min="0" value={cfg.targetProfit}
             onChange={(e) => setCfg({ ...cfg, targetProfit: e.target.value })} />
-          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Huis-winst na elke {cfg.cycleSize} inzetten</p>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Min. huis-winst na elke {cfg.cycleSize} bets</p>
         </div>
         <div>
           <span style={label}>Start-buffer (€)</span>
           <input className="input" type="number" step="0.01" min="0" value={cfg.houseBuffer}
             onChange={(e) => setCfg({ ...cfg, houseBuffer: e.target.value })} />
-          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Initieel voordeel voor het huis</p>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Initieel verwacht voordeel</p>
         </div>
         <div>
-          <span style={label}>Win-multiplier (×)</span>
-          <input className="input" type="number" step="0.1" min="1.1" value={cfg.winMultiplier}
-            onChange={(e) => setCfg({ ...cfg, winMultiplier: e.target.value })} />
-          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Speler wint X× inzet op win-slots</p>
-        </div>
-        <div>
-          <span style={label}>Cyclus-grootte</span>
-          <input className="input" type="number" step="1" min="5" max="100" value={cfg.cycleSize}
+          <span style={label}>Cyclus-grootte (bets)</span>
+          <input className="input" type="number" step="1" min="5" max="200" value={cfg.cycleSize}
             onChange={(e) => setCfg({ ...cfg, cycleSize: e.target.value })} />
-          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Aantal inzetten per cyclus</p>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Na hoeveel bets checken we?</p>
         </div>
       </div>
 
-      <div style={{ padding: '12px 14px', background: 'rgba(255,193,7,0.05)', border: '1px solid rgba(255,193,7,0.2)', borderRadius: 'var(--radius-md)', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-        <strong style={{ color: 'var(--accent-yellow)' }}>Hoe het werkt:</strong> Van elke {cfg.cycleSize} inzetten winnen 9 spelers (op vaste posities 3,6,9,...). De overige {parseInt(cfg.cycleSize) - 9} inzetten verliezen. Bij een gem. inzet van €10 en winst-multiplier {cfg.winMultiplier}× is de verwachte huis-winst per cyclus: €{((parseInt(cfg.cycleSize) - 9) * 10 - 9 * (parseFloat(cfg.winMultiplier) - 1) * 10).toFixed(2)}.
+      <div style={{ padding: '12px 14px', background: 'rgba(255,193,7,0.05)', border: '1px solid rgba(255,193,7,0.2)', borderRadius: 'var(--radius-md)', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+        <strong style={{ color: 'var(--accent-yellow)' }}>Wat er gebeurt:</strong> Alle bets zijn random. Na elke <strong>{cfg.cycleSize}</strong> bets wordt gecontroleerd of het huis minstens <strong>€{cfg.targetProfit}</strong> heeft gewonnen. Zo niet, dan crasht de <em>volgende</em> bet gegarandeerd vroeg (1.01–1.49×) of ligt de eerste mijn op tegel 0 — zodat de speler vrijwel zeker verliest. Daarna is de cyclus weer volledig random.
       </div>
 
       {msg && <p style={{ fontSize: 13, fontWeight: 600, color: msg.includes('Opgeslagen') ? 'var(--accent-green)' : 'var(--accent-red)' }}>{msg}</p>}

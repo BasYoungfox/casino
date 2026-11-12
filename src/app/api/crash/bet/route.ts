@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { timeToReach } from '@/lib/crashMath';
+import { generateCrashPoint, timeToReach } from '@/lib/crashMath';
 import { getGameConfig } from '@/lib/settings';
-import { getCycleConfig, getNextSlot, generateControlledCrashPoint } from '@/lib/cycleEngine';
+import { getCycleConfig, getSlotOverride, forcedLossCrashPoint } from '@/lib/cycleEngine';
 
 export async function POST(req: Request) {
   const user = await getCurrentUser();
@@ -37,14 +37,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Auto cashout moet boven 1.01× zijn.' }, { status: 400 });
   }
 
-  // Determine crash point: use cycle engine if enabled, else random
-  const slot = cycleConfig.enabled ? await getNextSlot() : null;
-  const crashPoint = cycleConfig.enabled && slot
-    ? generateControlledCrashPoint(slot.shouldWin, cycleConfig.winMultiplier)
-    : (() => {
-        const { generateCrashPoint } = require('@/lib/crashMath');
-        return generateCrashPoint(gc.houseEdge);
-      })();
+  // Determine crash point: fully random, unless a correction bet is due
+  const { forceLoss } = cycleConfig.enabled
+    ? await getSlotOverride()
+    : { forceLoss: false };
+
+  const crashPoint = forceLoss
+    ? forcedLossCrashPoint()
+    : generateCrashPoint(gc.houseEdge);
+
   const crashTimeMs = Math.round(timeToReach(crashPoint));
   const startTime = new Date();
 
@@ -77,15 +78,12 @@ export async function POST(req: Request) {
       },
     });
 
-    return { round, newBalance, slot };
+    return { round, newBalance };
   });
 
-  // Store slot reference on the round for cashout recording
-  // We pass slotJson as a hidden field — cashout will record the cycle bet
   return NextResponse.json({
     roundId: result.round.id,
     startTime: startTime.toISOString(),
     serverTime: new Date().toISOString(),
-    _slot: result.slot ? JSON.stringify(result.slot) : null,
   });
 }
