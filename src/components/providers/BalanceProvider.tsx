@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 
 type BalanceCtx = {
   balance: number;
@@ -32,17 +32,33 @@ export function BalanceProvider({
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch('/api/me');
+      const res = await fetch('/api/me', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         setBalanceState(data.balance);
       }
-    } catch {
-      /* ignore */
-    }
+    } catch { /* ignore */ }
   }, []);
 
   const addResult = useCallback(() => {}, []);
+
+  // Refresh on mount (picks up server-side balance changes like approved deposits)
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  // Refresh when user switches back to this tab
+  useEffect(() => {
+    const onFocus = () => refresh();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [refresh]);
+
+  // Poll every 15s
+  useEffect(() => {
+    const id = setInterval(refresh, 15_000);
+    return () => clearInterval(id);
+  }, [refresh]);
 
   return (
     <Ctx.Provider value={{ balance, username, role, setBalance, addBalance, refresh, addResult }}>

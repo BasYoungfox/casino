@@ -1,18 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect } from 'react';
 import { useBalance } from '@/components/providers/BalanceProvider';
 
 export default function TopBar() {
-  const { balance, username, role, refresh } = useBalance();
-
-  // Poll balance every 10s so deposits/withdrawals approved by admin
-  // are reflected without requiring a page reload or re-login
-  useEffect(() => {
-    const id = setInterval(refresh, 10_000);
-    return () => clearInterval(id);
-  }, [refresh]);
+  const { balance, username, role } = useBalance();
 
   return (
     <header className="header">

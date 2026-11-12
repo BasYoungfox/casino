@@ -1,7 +1,7 @@
 import { prisma } from './prisma';
 
 export type GameConfig = {
-  houseEdge: number; // fractie, bijv. 0.01 = 1%
+  houseEdge: number;
   minBet: number;
   maxBet: number;
   enabled: boolean;
@@ -20,8 +20,13 @@ export const DEFAULT_CONFIG: Config = {
 const key = (game: 'crash' | 'mines', field: keyof GameConfig) => `game.${game}.${field}`;
 
 export async function getSetting(k: string, fallback: string): Promise<string> {
-  const s = await prisma.setting.findUnique({ where: { key: k } });
-  return s ? s.value : fallback;
+  try {
+    const s = await prisma.setting.findUnique({ where: { key: k } });
+    return s ? s.value : fallback;
+  } catch {
+    // Table may not exist yet — return fallback silently
+    return fallback;
+  }
 }
 
 export async function getSettingNumber(k: string, fallback: number): Promise<number> {
@@ -36,11 +41,27 @@ export async function getSettingBool(k: string, fallback: boolean): Promise<bool
 }
 
 export async function setSetting(k: string, value: string): Promise<void> {
-  await prisma.setting.upsert({
-    where: { key: k },
-    create: { key: k, value: String(value) },
-    update: { value: String(value) },
-  });
+  try {
+    await prisma.setting.upsert({
+      where: { key: k },
+      create: { key: k, value: String(value) },
+      update: { value: String(value) },
+    });
+  } catch (e) {
+    // If Setting table doesn't exist, try to create it first
+    try {
+      await prisma.$executeRawUnsafe(
+        `CREATE TABLE IF NOT EXISTS "Setting" (key TEXT PRIMARY KEY, value TEXT NOT NULL)`
+      );
+      await prisma.setting.upsert({
+        where: { key: k },
+        create: { key: k, value: String(value) },
+        update: { value: String(value) },
+      });
+    } catch (e2) {
+      console.error('setSetting failed:', e2);
+    }
+  }
 }
 
 export async function getGameConfig(): Promise<Config> {

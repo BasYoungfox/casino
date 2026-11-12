@@ -41,7 +41,9 @@ export async function needsCorrectionBet(): Promise<boolean> {
 }
 
 export async function setCorrectionPending(pending: boolean) {
-  await setSetting('cycle.correctionPending', pending ? '1' : '0');
+  try {
+    await setSetting('cycle.correctionPending', pending ? '1' : '0');
+  } catch { /* ignore */ }
 }
 
 /**
